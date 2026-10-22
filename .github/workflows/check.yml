@@ -1,0 +1,36 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: JavaScript syntax
+        run: |
+          fail=0
+          for f in web/y/*.js web/y/lang/*.js; do
+            cp "$f" /tmp/check.mjs
+            node --check /tmp/check.mjs || { echo "::error file=$f::syntax error"; fail=1; }
+          done
+          exit $fail
+
+      - name: Python syntax
+        run: python3 -m py_compile server/tubehaus_server.py
+
+      - name: docker compose config
+        run: cp .env.example .env && docker compose config --quiet
+
+      - name: Shell scripts
+        run: bash -n deploy/entrypoint.sh

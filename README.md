@@ -1,10 +1,19 @@
 # TubeHaus
 
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+[![Check](https://github.com/biolend83/tubehaus/actions/workflows/check.yml/badge.svg)](https://github.com/biolend83/tubehaus/actions/workflows/check.yml)
+![Docker: amd64 | arm64](https://img.shields.io/badge/docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
+[![Built on Invidious](https://img.shields.io/badge/built%20on-Invidious-orange)](https://invidious.io)
+
 **Your own YouTube, on your own server: fast, private, and it doesn't get blocked.**
 
 It looks and works exactly like YouTube (same layout, same URLs, same keyboard shortcuts),
 with no ads and no tracking. It also plays live streams with real-time captions, keeps one
 library for all your devices, and keeps working even from a cheap cloud VPS.
+
+TubeHaus is built on top of [Invidious](https://invidious.io) and
+[invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to
+YouTube. TubeHaus adds its own front end and a small server next to them. All credit to the Invidious team.
 
 ![TubeHaus home screen](docs/screenshot-home.jpg)
 
@@ -61,6 +70,13 @@ browser ──► Caddy ─┬─ /y/*, page navigations ───────�
 TubeHaus uses [Invidious](https://github.com/iv-org/invidious) as its YouTube backend and adds its own server next to it. Invidious' companion `private_url` points at the TubeHaus server, which passes everything
 through and patches in what is missing (live HLS URLs, an empty `storyboards` key some old
 videos lack, WARP rotation when YouTube blocks).
+
+## Requirements
+
+- **Server:** Linux with Docker and docker compose, x86-64 or ARM64 (a free Oracle Cloud ARM VM works fine)
+- **CPU / RAM:** 2+ cores and about 4 GB RAM for the whole stack. Live captions use about one more core, only while someone watches a live stream with captions on
+- **Disk:** about 10-20 GB, mostly Docker images. Videos are streamed, not stored, so this doesn't grow with use
+- **A hostname** for HTTPS (a domain, or a free wildcard DNS name such as sslip.io), or plain HTTP on a LAN
 
 ## Quick start (Docker)
 
@@ -134,6 +150,37 @@ Copy `web/` to `/srv/tubehaus/web` and adapt [`deploy/Caddyfile.example`](deploy
 login in front (Caddy `basic_auth`, or `forward_auth` to Authelia / Authentik / a passkey gate)
 before exposing it. Set `window.TUBEHAUS_LOGIN_URL` in `index.html` if expired sessions should
 be sent to your login page.
+
+## FAQ
+
+**Is this a replacement for Invidious?**
+No, it runs alongside it. Invidious and its companion fetch everything from YouTube; TubeHaus is a
+YouTube-style front end plus a server that adds live streams, live captions, a shared library, send to TV,
+downloads and WARP egress. The docker compose file runs the official Invidious images for you.
+
+**Can I use my existing Invidious instance (or keep using Yattee, FreeTube, ...)?**
+Yes, follow *Manual setup* and point TubeHaus at it. Apps that talk to Invidious keep working, and if the
+companion goes out through WARP they benefit from it too. Live streams and WARP rotation work best when
+TubeHaus sits in front of the companion as described.
+
+**Where does the content come from? Does it store videos?**
+Everything comes from YouTube. Nothing is stored except your library (subscriptions, history, playlists) and
+short-lived files for offline downloads.
+
+**Is there a recommendation algorithm?**
+Not a personal one: no Google account is involved, so nothing learns from what you watch. You get your
+subscriptions feed, trending and category tabs, and YouTube's per-video related list.
+
+**Age-restricted videos?**
+They usually don't play, since there's no signed-in account to pass the age check. That is the same as Invidious.
+
+**Does anything phone home?**
+No. There are no accounts and no telemetry. The only outside requests are YouTube (through Invidious and WARP)
+and, from the browser, the optional SponsorBlock and Return YouTube Dislike lookups.
+
+**How do phones and TVs connect?**
+It's a web app: open your address in the browser, or use "Add to Home Screen" to install it like an app.
+TV browsers get a TV mode with remote-control navigation.
 
 ## Configuration
 

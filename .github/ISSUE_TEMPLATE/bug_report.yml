@@ -1,0 +1,37 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: How do you run TubeHaus?
+      options:
+        - docker compose (this repo)
+        - Manual setup
+        - Manual setup with an existing Invidious instance
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPad, Chrome 155 / Android TV browser / Windows, Edge
+  - type: input
+    id: video
+    attributes:
+      label: Example video
+      description: A video ID or URL where it happens (if it is video-specific)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "`docker compose logs tubehaus --tail 100` (and `companion` / `invidious` if relevant). Remove anything private."
+      render: text
