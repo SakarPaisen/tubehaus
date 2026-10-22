@@ -13,6 +13,9 @@ services:
       - "443:443"
     environment:
       TUBEHAUS_SITE: ${TUBEHAUS_SITE}
+      TUBEHAUS_AUTH: ${TUBEHAUS_AUTH:-none}
+      TUBEHAUS_USER: ${TUBEHAUS_USER:-}
+      TUBEHAUS_PASSWORD_HASH: ${TUBEHAUS_PASSWORD_HASH:-}
     volumes:
       - ./deploy/Caddyfile.docker:/etc/caddy/Caddyfile:ro
       - ./web:/srv/web:ro
@@ -33,6 +36,12 @@ services:
     volumes:
       - tubehaus-data:/data
       - warp-data:/var/lib/cloudflare-warp
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3010/api/p/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
 
   bgutil:
     image: brainicism/bgutil-ytdlp-pot-provider

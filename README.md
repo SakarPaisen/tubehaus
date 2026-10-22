@@ -91,8 +91,22 @@ docker compose up -d        # first build takes a few minutes (whisper.cpp)
 ```
 
 Then open your domain. WARP registers itself on first start and keeps its registration in a
-volume; the companion reaches YouTube through it as well. Add a login to
-`deploy/Caddyfile.docker` before you expose it (see *Caddy* below).
+volume; the companion reaches YouTube through it as well.
+
+**Add a login before you expose it.** TubeHaus has no accounts of its own. The simplest option is the built-in
+password: set `TUBEHAUS_AUTH=basic`, `TUBEHAUS_USER` and `TUBEHAUS_PASSWORD_HASH` in `.env` (the hash comes from
+`docker compose run --rm caddy caddy hash-password`; write every `$` as `$$`). Or put Authelia, Authentik or a
+passkey gate in front with `forward_auth`.
+
+**Check that everything works:**
+
+```sh
+docker compose exec tubehaus python3 /app/server/tubehaus_server.py --doctor
+```
+
+It tests WARP, YouTube, Invidious, a real video lookup and the optional tools, one line each.
+If something fails, see [Troubleshooting](docs/TROUBLESHOOTING.md). To update or back up, see
+[Updating and backups](docs/UPGRADING.md).
 
 ## Manual setup
 

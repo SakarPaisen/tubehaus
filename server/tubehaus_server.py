@@ -159,7 +159,7 @@ def log(tag, msg, t0=None, every=LOG_EVERY):
             if len(_log_at) > 500:
                 for k in [k for k, v in _log_at.items() if now - v > 3600]:
                     del _log_at[k]
-    print("ha[%s] %s%s" % (tag, msg, "" if t0 is None else " %dms" % ((now - t0) * 1000)), flush=True)
+    print("[%s] %s%s" % (tag, msg, "" if t0 is None else " %dms" % ((now - t0) * 1000)), flush=True)
 
 
 # ---------- machine-translated subtitles ----------
@@ -1337,6 +1337,93 @@ def live_cc(vid):
         return c
 
 
+# ---------- self-check: `python3 tubehaus_server.py --doctor` / GET /api/p/health ----------
+def doctor():
+    """Check every piece TubeHaus depends on and print one line each. Returns the
+    number of failed required checks (the exit code), so it can run in scripts."""
+    import shutil
+    fails = 0
+
+    def line(ok, name, detail, required=True):
+        nonlocal fails
+        mark = "ok  " if ok else ("FAIL" if required else "warn")
+        if not ok and required:
+            fails += 1
+        print(f"[{mark}] {name:<22} {detail}")
+
+    def get(url, opener=None, timeout=10):
+        return (opener or urllib.request.build_opener()).open(url, timeout=timeout).read()
+
+    # 1. WARP (or no proxy)
+    if YT_PROXY:
+        try:
+            t = get("https://www.cloudflare.com/cdn-cgi/trace", YT).decode()
+            warp = re.search(r"^warp=(\w+)$", t, re.M)
+            ip = re.search(r"^ip=(.+)$", t, re.M)
+            line(warp and warp.group(1) in ("on", "plus"), "WARP proxy",
+                 f"{YT_PROXY} -> warp={warp.group(1) if warp else '?'} ip={ip.group(1) if ip else '?'}")
+        except Exception as ex:
+            line(False, "WARP proxy", f"{YT_PROXY} unreachable ({type(ex).__name__}: {str(ex)[:80]})")
+    else:
+        line(True, "WARP proxy", "disabled (HT_YT_PROXY empty): YouTube is reached directly", required=False)
+
+    # 2. YouTube itself, through the same path
+    try:
+        body = get("https://www.youtube.com/generate_204", YT)
+        line(True, "YouTube reachable", "via WARP" if YT_PROXY else "direct")
+    except urllib.error.HTTPError as ex:
+        line(ex.code == 204, "YouTube reachable", f"HTTP {ex.code}")
+    except Exception as ex:
+        line(False, "YouTube reachable", f"{type(ex).__name__}: {str(ex)[:80]}")
+
+    # 3. Invidious
+    try:
+        st = json.loads(get(INV + "/api/v1/stats"))
+        line(True, "Invidious", f"{INV} (version {st.get('software', {}).get('version', '?')})")
+    except Exception as ex:
+        line(False, "Invidious", f"{INV} ({type(ex).__name__}: {str(ex)[:80]})")
+
+    # 4. invidious-companion: does a real video resolve?
+    try:
+        d = json.loads(get(INV + "/api/v1/videos/jNQXAC9IVRw?local=true", timeout=30))
+        n = len(d.get("adaptiveFormats") or [])
+        line(n > 0, "Video lookup", f"'{d.get('title', '?')}' -> {n} streams" if n else
+             f"no streams: {str(d.get('error') or d)[:100]}")
+    except urllib.error.HTTPError as ex:
+        line(False, "Video lookup", f"HTTP {ex.code}: {ex.read()[:120]!r}")
+    except Exception as ex:
+        line(False, "Video lookup", f"{type(ex).__name__}: {str(ex)[:80]}")
+
+    # 5. optional tools
+    yt = shutil.which(YTDLP) or (YTDLP if os.path.exists(YTDLP) else "")
+    line(bool(yt), "yt-dlp (live streams)", yt or f"not found ({YTDLP})", required=False)
+    ff = shutil.which("ffmpeg")
+    line(bool(ff), "ffmpeg (HD downloads)", ff or "not found", required=False)
+    wok = bool(WHISPER_BIN and WHISPER_MODEL and os.path.exists(WHISPER_BIN) and os.path.exists(WHISPER_MODEL))
+    line(wok, "whisper (live captions)", f"{WHISPER_BIN} + {os.path.basename(WHISPER_MODEL)}" if wok else
+         "not configured (HT_WHISPER_BIN / HT_WHISPER_MODEL)", required=False)
+
+    # 6. state directory
+    try:
+        os.makedirs(STATE, exist_ok=True)
+        probe = os.path.join(STATE, ".doctor")
+        open(probe, "w").close()
+        os.remove(probe)
+        line(True, "State directory", os.path.abspath(STATE))
+    except Exception as ex:
+        line(False, "State directory", f"{STATE} not writable ({ex})")
+
+    print("\nAll required checks passed." if not fails else f"\n{fails} required check(s) failed.")
+    return fails
+
+
+def health():
+    now = time.time()
+    return {"ok": True, "warp_proxy": bool(YT_PROXY), "warp_rotate": WARP_ROTATE,
+            "warp_rotations_30min": len([t for t in rot_hist if now - t < 1800]),
+            "live_captions": bool(WHISPER_BIN and WHISPER_MODEL)}
+
+
 class H(BaseHTTPRequestHandler):
     # Invidious re-dialled TCP for every companion call under HTTP/1.0; 1.1 keeps
     # the socket. Every reply below either sends a real Content-Length or sets
@@ -1435,6 +1522,8 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if p.endswith("/api/p/health"):
+            return self.send(200, health())
         if p.endswith("/plog"):
             # the player is the only place that sees a playback failure; without this
             # beacon a video that dies mid-playback leaves no trace on the server
@@ -1813,6 +1902,9 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    import sys
+    if "--doctor" in sys.argv:
+        sys.exit(1 if doctor() else 0)
     os.makedirs(STATE, exist_ok=True)
     threading.Thread(target=yt_feed_loop, daemon=True).start()
     threading.Thread(target=ytdl_gc_loop, daemon=True).start()
