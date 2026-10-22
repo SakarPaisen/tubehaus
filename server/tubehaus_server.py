@@ -241,8 +241,9 @@ def sub_vtt(vid, tl=SUB_LANG):
     if not re.fullmatch(r"[\w-]{11}", vid) or not re.fullmatch(r"[a-z]{2}(-[A-Za-z]{2,4})?", tl):
         raise ValueError("bad video id or language")
     os.makedirs(SUBS, exist_ok=True)
-    cache = os.path.join(SUBS, "%s.%s.vtt" % (vid, tl))
-    if os.path.dirname(os.path.abspath(cache)) != os.path.abspath(SUBS):
+    base = os.path.abspath(SUBS) + os.sep
+    cache = os.path.normpath(os.path.join(base, "%s.%s.vtt" % (vid, tl)))
+    if not cache.startswith(base):
         raise ValueError("bad cache path")
     if os.path.exists(cache):
         return open(cache, "rb").read()
