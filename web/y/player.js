@@ -17,7 +17,6 @@ function vttTime(s) {
   const p = s.trim().split(":");
   return p.reduce((a, b) => a * 60 + parseFloat(b.replace(",", ".")), 0);
 }
-const deco = document.createElement("textarea");
 function parseVtt(txt) {
   const cues = [];
   for (const block of txt.replace(/\r/g, "").split(/\n{2,}/)) {
@@ -26,9 +25,8 @@ function parseVtt(txt) {
     if (i < 0) continue;
     const [a, b] = lines[i].split("-->");
     const s = vttTime(a), e = vttTime(b.trim().split(/\s+/)[0]);
-    let text = lines.slice(i + 1).join("\n").replace(/<[^>]+>/g, "");
-    deco.innerHTML = text;
-    text = deco.value.trim();
+    // tags (<c>, <i>, timestamps) and entities (&amp;) off; DOMParser never runs scripts
+    const text = new DOMParser().parseFromString(lines.slice(i + 1).join("\n"), "text/html").body.textContent.trim();
     if (!text || e - s < 0.05) continue;
     cues.push({ s, e, text });
   }

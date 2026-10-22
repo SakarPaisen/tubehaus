@@ -237,8 +237,13 @@ def _translate(lines, tl=SUB_LANG):
 
 def sub_vtt(vid, tl=SUB_LANG):
     """Translated VTT for one video id, cached on disk."""
+    # both end up in a file name: only a video id and a language code may get through
+    if not re.fullmatch(r"[\w-]{11}", vid) or not re.fullmatch(r"[a-z]{2}(-[A-Za-z]{2,4})?", tl):
+        raise ValueError("bad video id or language")
     os.makedirs(SUBS, exist_ok=True)
-    cache = "%s/%s.%s.vtt" % (SUBS, vid, tl)
+    cache = os.path.join(SUBS, "%s.%s.vtt" % (vid, tl))
+    if os.path.dirname(os.path.abspath(cache)) != os.path.abspath(SUBS):
+        raise ValueError("bad cache path")
     if os.path.exists(cache):
         return open(cache, "rb").read()
     t0 = time.time()
@@ -954,7 +959,7 @@ def yt_fill_thumbs():
             th = sorted(d.get("authorThumbnails") or [], key=lambda x: x.get("width", 0))
             th = next((x for x in th if x.get("width", 0) >= 88), th[-1] if th else None)
             if th:
-                got[cid] = re.sub(r"^https?://(yt3.googleusercontent.com|yt3.ggpht.com)/", "/ggpht/", re.sub(r"^https?://[^/]+(?=/ggpht/)", "", th["url"]))
+                got[cid] = re.sub(r"^https?://(yt3\.googleusercontent\.com|yt3\.ggpht\.com)/", "/ggpht/", re.sub(r"^https?://[^/]+(?=/ggpht/)", "", th["url"]))
         except Exception as ex:
             log("ytfeed", f"thumb {cid} FAIL {repr(ex)[:80]}")
     if got:

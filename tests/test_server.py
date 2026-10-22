@@ -94,6 +94,11 @@ class Subtitles(unittest.TestCase):
         self.assertEqual(ts._vtt_cues(vtt), [("00:00:01.000 --> 00:00:02.000", ["Hello", "world"]),
                                              ("00:00:03.000 --> 00:00:04.000", ["Bye"])])
 
+    def test_subtitle_cache_path_cannot_escape(self):
+        for vid, tl in (("../../etc/x", "en"), ("jNQXAC9IVRw", "../../x"), ("jNQXAC9IVRw", "en/../..")):
+            with self.assertRaises(ValueError):
+                ts.sub_vtt(vid, tl)
+
     def test_cc_time(self):
         self.assertAlmostEqual(ts._cc_time("01:02:03.500"), 3723.5)
 
