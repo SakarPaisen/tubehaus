@@ -8,9 +8,14 @@
 - `GET /api/p/health` and a Docker healthcheck for the TubeHaus container
 - Optional built-in login for the docker compose setup (`TUBEHAUS_AUTH=basic`)
 - [Troubleshooting](docs/TROUBLESHOOTING.md) and [Updating and backups](docs/UPGRADING.md) guides
+- Server unit tests and a translation completeness check, both run in CI
+- Workflow that builds a multi-arch image (amd64 + arm64) on every release
 
 ### Changed
 - Server log lines are tagged `[tag]` instead of `ha[tag]`
+
+### Fixed
+- The library file is always read and written as UTF-8, whatever the system locale
 
 ## v0.1.0 — 2026-10-22
 

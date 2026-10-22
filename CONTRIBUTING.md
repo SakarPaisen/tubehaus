@@ -25,6 +25,8 @@ Before you push, the same checks CI runs:
 ```sh
 for f in web/y/*.js web/y/lang/*.js; do cp "$f" /tmp/c.mjs && node --check /tmp/c.mjs || echo "FAIL $f"; done
 python3 -m py_compile server/tubehaus_server.py
+python3 -m unittest discover -s tests
+node scripts/i18n-check.mjs
 ```
 
 ## Translations
@@ -32,6 +34,9 @@ python3 -m py_compile server/tubehaus_server.py
 Interface text lives in `web/y/lang/<code>.js`, keyed by the original Korean text. To add a language,
 copy `en.js`, translate the values, and add the code to `LANGS` in `web/y/i18n.js`. Fixes to existing
 translations are very welcome; several were machine-assisted.
+
+`node scripts/i18n-check.mjs` lists missing keys and `{0}` placeholders that don't match English.
+CI runs it in strict mode.
 
 ## License
 

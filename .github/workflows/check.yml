@@ -26,8 +26,14 @@ jobs:
           done
           exit $fail
 
+      - name: Translations complete
+        run: node scripts/i18n-check.mjs --strict
+
       - name: Python syntax
         run: python3 -m py_compile server/tubehaus_server.py
+
+      - name: Server unit tests
+        run: python3 -m unittest discover -s tests -v
 
       - name: docker compose config
         run: cp .env.example .env && docker compose config --quiet

@@ -275,14 +275,17 @@ def sub_vtt(vid, tl=SUB_LANG):
 
 def jload(p, d):
     try:
-        return json.load(open(p))
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
         return d
 
 
 def jsave(p, v):
+    # titles are any language: always UTF-8, whatever the system locale says
     t = p + ".tmp"
-    json.dump(v, open(t, "w"), ensure_ascii=False)
+    with open(t, "w", encoding="utf-8") as f:
+        json.dump(v, f, ensure_ascii=False)
     os.replace(t, p)
 
 
