@@ -5,8 +5,8 @@
 ```sh
 cd tubehaus
 git pull
-docker compose pull            # newer Invidious, companion, Caddy, PostgreSQL images
-docker compose up -d --build   # rebuilds the TubeHaus image with the new code
+docker compose pull            # newer TubeHaus, Invidious, companion, Caddy, PostgreSQL images
+docker compose up -d            # add --build if you build the TubeHaus image yourself
 ```
 
 Your library, the WARP registration and the Invidious database live in Docker volumes, so they survive updates.

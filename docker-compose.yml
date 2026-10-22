@@ -25,6 +25,8 @@ services:
       - invidious
 
   tubehaus:
+    # prebuilt for amd64 and arm64; `docker compose up -d --build` builds it from this checkout instead
+    image: ghcr.io/biolend83/tubehaus:latest
     build: .
     restart: unless-stopped
     environment:

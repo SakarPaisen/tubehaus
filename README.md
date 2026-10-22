@@ -87,8 +87,12 @@ Invidious + companion + PostgreSQL images. Works on x86-64 and ARM64.
 ```sh
 git clone https://github.com/biolend83/tubehaus && cd tubehaus
 cp .env.example .env        # set your domain and three secrets
-docker compose up -d        # first build takes a few minutes (whisper.cpp)
+docker compose pull         # prebuilt images, amd64 and arm64
+docker compose up -d
 ```
+
+To build the TubeHaus image yourself instead (for example after changing the code), use
+`docker compose up -d --build`. The first build takes a few minutes because of whisper.cpp.
 
 Then open your domain. WARP registers itself on first start and keeps its registration in a
 volume; the companion reaches YouTube through it as well.

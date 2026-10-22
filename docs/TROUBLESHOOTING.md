@@ -53,7 +53,7 @@ A brand-new install can take a minute before the first PO token is ready.
 ## Live captions say "off"
 
 The image was built without whisper.cpp (`WITH_WHISPER=0`), or the model download failed during the build.
-Rebuild with `docker compose build --no-cache tubehaus`.
+Pull the prebuilt image (`docker compose pull tubehaus && docker compose up -d`), or rebuild with `docker compose build --no-cache tubehaus`.
 
 ## HTTPS certificate errors
 
