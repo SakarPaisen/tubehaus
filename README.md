@@ -1,5 +1,6 @@
 # TubeHaus
 
+[![Release](https://img.shields.io/github/v/release/biolend83/tubehaus)](https://github.com/biolend83/tubehaus/releases)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Check](https://github.com/biolend83/tubehaus/actions/workflows/check.yml/badge.svg)](https://github.com/biolend83/tubehaus/actions/workflows/check.yml)
 ![Docker: amd64 | arm64](https://img.shields.io/badge/docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
@@ -222,6 +223,14 @@ All settings are environment variables — see [`.env.example`](.env.example).
 
 Interface text lives in `web/y/lang/<code>.js` (the key is the original Korean text). To add a language, copy
 `en.js`, translate the values, and add the code to `LANGS` in `web/y/i18n.js`. Corrections are very welcome.
+
+## Community
+
+- **Questions and setup help:** [Discussions](https://github.com/biolend83/tubehaus/discussions) (please include the `--doctor` output)
+- **Bugs and feature requests:** [Issues](https://github.com/biolend83/tubehaus/issues/new/choose)
+- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md). Translation fixes are a great first contribution
+- **Security problems:** report them privately, see [SECURITY.md](SECURITY.md)
+- **What changed:** [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/biolend83/tubehaus/releases)
 
 ## Credits
 
